@@ -76,6 +76,40 @@
       </article>
     </section>
 
+    <section class="plex-section" id="plex-section">
+      <div class="plex-section__header">
+        <h2 class="plex-section__title">Plex Media Server</h2>
+        <span class="status-badge" id="plex-status-badge">—</span>
+      </div>
+      <div class="plex-grid" id="plex-grid">
+        <div class="plex-stat">
+          <span class="plex-stat__label">Источник</span>
+          <span class="plex-stat__value" id="plex-source">—</span>
+        </div>
+        <div class="plex-stat">
+          <span class="plex-stat__label">Имя</span>
+          <span class="plex-stat__value" id="plex-name">—</span>
+        </div>
+        <div class="plex-stat">
+          <span class="plex-stat__label">Uptime</span>
+          <span class="plex-stat__value" id="plex-uptime">—</span>
+        </div>
+        <div class="plex-stat">
+          <span class="plex-stat__label">CPU</span>
+          <span class="plex-stat__value" id="plex-cpu">—</span>
+        </div>
+        <div class="plex-stat">
+          <span class="plex-stat__label">RAM</span>
+          <span class="plex-stat__value" id="plex-ram">—</span>
+        </div>
+        <div class="plex-stat">
+          <span class="plex-stat__label">Образ / PID</span>
+          <span class="plex-stat__value" id="plex-extra">—</span>
+        </div>
+      </div>
+      <p class="plex-empty" id="plex-empty" hidden>Plex не найден (контейнер plex/plexmediaserver или сервис plexmediaserver)</p>
+    </section>
+
     <section class="docker-section">
       <div class="docker-section__header">
         <h2 class="docker-section__title">Docker контейнеры</h2>

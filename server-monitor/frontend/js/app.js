@@ -39,6 +39,44 @@ function updateConnection(ok) {
   label.textContent = ok ? "Онлайн" : "Ошибка подключения";
 }
 
+function renderPlex(plex) {
+  const section = $("plex-section");
+  const grid = $("plex-grid");
+  const empty = $("plex-empty");
+  const badge = $("plex-status-badge");
+
+  if (!plex.found) {
+    grid.hidden = true;
+    empty.hidden = false;
+    badge.textContent = "не найден";
+    badge.className = "status-badge status-badge--exited";
+    return;
+  }
+
+  grid.hidden = false;
+  empty.hidden = true;
+
+  const isRunning = plex.status === "running" || plex.status === "active";
+  badge.textContent = plex.status;
+  badge.className = `status-badge ${statusBadgeClass(isRunning ? "running" : plex.status)}`;
+
+  $("plex-source").textContent = plex.source === "docker" ? "Docker" : "systemd";
+  $("plex-name").textContent = plex.name || "—";
+  $("plex-uptime").textContent = plex.uptime.formatted;
+
+  const res = plex.resources || {};
+  $("plex-cpu").textContent = `${res.cpu_percent ?? 0}%`;
+  $("plex-ram").textContent = formatBytes(res.memory_bytes || 0);
+
+  if (plex.source === "docker") {
+    $("plex-extra").textContent = plex.image || plex.container_id || "—";
+  } else if (plex.systemd) {
+    $("plex-extra").textContent = `PID ${plex.systemd.main_pid || "—"}`;
+  } else {
+    $("plex-extra").textContent = "—";
+  }
+}
+
 function renderMetrics(data) {
   $("hostname").textContent = data.hostname || "—";
 
@@ -67,6 +105,8 @@ function renderMetrics(data) {
     $("temp-value").textContent = "N/A";
     $("temp-meta").textContent = "Датчик недоступен";
   }
+
+  renderPlex(data.plex || { found: false });
 
   const docker = data.docker;
   const tbody = $("docker-tbody");

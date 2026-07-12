@@ -1,0 +1,16 @@
+services:
+  monitor:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: server-monitor
+    ports:
+      - "8080:8000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc:/proc:ro
+      - /sys:/sys:ro
+    pid: host
+    restart: unless-stopped
+    environment:
+      - SYSFS_PATH=/sys

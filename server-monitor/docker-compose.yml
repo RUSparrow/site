@@ -6,6 +6,8 @@ services:
     container_name: server-monitor
     ports:
       - "8080:8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /proc:/proc:ro
@@ -16,3 +18,5 @@ services:
     environment:
       - SYSFS_PATH=/sys
       - DBUS_SYSTEM_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket
+      - PLEX_WEB_HOST=host.docker.internal
+      - PLEX_WEB_PORT=32400

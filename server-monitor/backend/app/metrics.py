@@ -1,7 +1,10 @@
 import os
 import shutil
+import socket
 import subprocess
 import time
+import urllib.error
+import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -9,10 +12,9 @@ import docker
 import psutil
 
 SYSFS_PATH = Path(os.getenv("SYSFS_PATH", "/sys"))
-PLEX_CONTAINER_NAMES = {"plex", "plexmediaserver"}
 PLEX_SERVICE_NAME = "plexmediaserver"
-
-_plex_cpu_cache: dict[str, tuple[int, int]] = {}
+PLEX_WEB_HOST = os.getenv("PLEX_WEB_HOST", "127.0.0.1")
+PLEX_WEB_PORT = int(os.getenv("PLEX_WEB_PORT", "32400"))
 
 
 def _format_uptime(seconds: float) -> str:
@@ -123,10 +125,6 @@ def get_docker_containers() -> dict:
     return {"available": True, "containers": containers, "total": len(containers)}
 
 
-def _is_plex_container(name: str) -> bool:
-    return name.lower().lstrip("/") in PLEX_CONTAINER_NAMES
-
-
 def _parse_iso_timestamp(value: str) -> float | None:
     if not value or value in ("n/a", "0"):
         return None
@@ -139,91 +137,67 @@ def _parse_iso_timestamp(value: str) -> float | None:
         return None
 
 
-def _docker_cpu_percent(container_id: str, stats: dict) -> float:
-    cpu_stats = stats.get("cpu_stats", {})
-    precpu_stats = stats.get("precpu_stats", {})
-    cpu_usage = cpu_stats.get("cpu_usage", {})
-    precpu_usage = precpu_stats.get("cpu_usage", {})
-
-    cpu_delta = cpu_usage.get("total_usage", 0) - precpu_usage.get("total_usage", 0)
-    system_delta = cpu_stats.get("system_cpu_usage", 0) - precpu_stats.get("system_cpu_usage", 0)
-
-    if system_delta <= 0 or cpu_delta <= 0:
-        cached = _plex_cpu_cache.get(container_id)
-        if cached:
-            prev_cpu, prev_system = cached
-            cpu_delta = cpu_usage.get("total_usage", 0) - prev_cpu
-            system_delta = cpu_stats.get("system_cpu_usage", 0) - prev_system
-
-    _plex_cpu_cache[container_id] = (
-        cpu_usage.get("total_usage", 0),
-        cpu_stats.get("system_cpu_usage", 0),
-    )
-
-    if system_delta <= 0 or cpu_delta <= 0:
-        return 0.0
-
-    cpu_count = cpu_stats.get("online_cpus") or len(cpu_usage.get("percpu_usage", [])) or 1
-    return round((cpu_delta / system_delta) * cpu_count * 100.0, 1)
-
-
-def _get_plex_from_docker() -> dict | None:
-    try:
-        client = docker.from_env()
-        client.ping()
-    except Exception:
-        return None
-
-    for container in client.containers.list(all=True):
-        if not _is_plex_container(container.name):
-            continue
-
-        state = container.attrs.get("State", {})
-        status = container.status
-        started_at = _parse_iso_timestamp(state.get("StartedAt", ""))
-        uptime_seconds = int(time.time() - started_at) if started_at and status == "running" else 0
-
-        resources = {"cpu_percent": 0.0, "memory_bytes": 0, "memory_limit": 0}
-        if status == "running":
-            try:
-                stats = container.stats(stream=False)
-                mem_stats = stats.get("memory_stats", {})
-                resources = {
-                    "cpu_percent": _docker_cpu_percent(container.id, stats),
-                    "memory_bytes": mem_stats.get("usage", 0) or 0,
-                    "memory_limit": mem_stats.get("limit", 0) or 0,
-                }
-            except Exception:
-                pass
-
-        return {
-            "found": True,
-            "source": "docker",
-            "name": container.name,
-            "status": status,
-            "uptime": {
-                "seconds": uptime_seconds,
-                "formatted": _format_uptime(uptime_seconds) if uptime_seconds else "—",
-            },
-            "resources": resources,
-            "image": (
-                container.image.tags[0]
-                if container.image.tags
-                else container.image.short_id
-            ),
-            "container_id": container.short_id,
-        }
-
-    return None
-
-
-def _parse_systemctl_show(output: str) -> dict:
+def _parse_systemctl_show(output: str) -> dict[str, str]:
     props: dict[str, str] = {}
     for line in output.splitlines():
         if "=" in line:
             key, value = line.split("=", 1)
             props[key] = value
     return props
+
+
+def _map_service_status(active_state: str, sub_state: str) -> str:
+    if active_state == "active" and sub_state == "running":
+        return "running"
+    return "stopped"
+
+
+def _check_plex_web() -> dict:
+    host = PLEX_WEB_HOST
+    port = PLEX_WEB_PORT
+    url = f"http://{host}:{port}/identity"
+
+    try:
+        request = urllib.request.Request(url, method="GET")
+        with urllib.request.urlopen(request, timeout=3) as response:
+            return {
+                "available": True,
+                "host": host,
+                "port": port,
+                "url": url,
+                "status_code": response.status,
+            }
+    except urllib.error.HTTPError as exc:
+        return {
+            "available": exc.code < 500,
+            "host": host,
+            "port": port,
+            "url": url,
+            "status_code": exc.code,
+            "error": str(exc),
+        }
+    except (urllib.error.URLError, OSError, TimeoutError) as exc:
+        # Fallback: TCP connect if HTTP fails (e.g. redirect/SSL quirks)
+        try:
+            with socket.create_connection((host, port), timeout=3):
+                return {
+                    "available": True,
+                    "host": host,
+                    "port": port,
+                    "url": url,
+                    "status_code": None,
+                    "note": "tcp_ok",
+                }
+        except OSError:
+            pass
+
+        return {
+            "available": False,
+            "host": host,
+            "port": port,
+            "url": url,
+            "error": str(exc),
+        }
 
 
 def _get_plex_from_systemd() -> dict | None:
@@ -236,7 +210,7 @@ def _get_plex_from_systemd() -> dict | None:
                 "systemctl",
                 "show",
                 PLEX_SERVICE_NAME,
-                "--property=ActiveState,SubState,MainPID,ActiveEnterTimestamp,MemoryCurrent",
+                "--property=ActiveState,SubState,MainPID,ActiveEnterTimestamp,UnitFileState",
             ],
             capture_output=True,
             text=True,
@@ -251,42 +225,20 @@ def _get_plex_from_systemd() -> dict | None:
     props = _parse_systemctl_show(result.stdout)
     active_state = props.get("ActiveState", "unknown")
     sub_state = props.get("SubState", "")
+    unit_state = props.get("UnitFileState", "")
 
-    if active_state in ("inactive", "failed", "not-found") and props.get("MainPID", "0") == "0":
-        status_result = subprocess.run(
-            ["systemctl", "is-active", PLEX_SERVICE_NAME],
-            capture_output=True,
-            text=True,
-            timeout=5,
-        )
-        if status_result.returncode != 0 and active_state == "not-found":
-            return None
+    if active_state == "not-found" and unit_state in ("", "disabled", "masked"):
+        return None
 
     main_pid = int(props.get("MainPID", "0") or "0")
     started_at = _parse_iso_timestamp(props.get("ActiveEnterTimestamp", ""))
-    is_running = active_state == "active" and sub_state == "running"
+    status = _map_service_status(active_state, sub_state)
+    is_running = status == "running"
     uptime_seconds = int(time.time() - started_at) if started_at and is_running else 0
-
-    resources = {"cpu_percent": 0.0, "memory_bytes": 0, "memory_limit": 0}
-    memory_current = props.get("MemoryCurrent", "[not set]")
-    if memory_current.isdigit():
-        resources["memory_bytes"] = int(memory_current)
-
-    if is_running and main_pid > 0:
-        try:
-            proc = psutil.Process(main_pid)
-            resources["cpu_percent"] = round(proc.cpu_percent(interval=0.1), 1)
-            if not resources["memory_bytes"]:
-                resources["memory_bytes"] = proc.memory_info().rss
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            pass
-
-    status = "running" if is_running else active_state
 
     return {
         "found": True,
-        "source": "systemd",
-        "name": PLEX_SERVICE_NAME,
+        "service": f"{PLEX_SERVICE_NAME}.service",
         "status": status,
         "systemd": {
             "active_state": active_state,
@@ -297,26 +249,25 @@ def _get_plex_from_systemd() -> dict | None:
             "seconds": uptime_seconds,
             "formatted": _format_uptime(uptime_seconds) if uptime_seconds else "—",
         },
-        "resources": resources,
     }
 
 
 def get_plex_status() -> dict:
-    docker_info = _get_plex_from_docker()
-    if docker_info:
-        return docker_info
+    service_info = _get_plex_from_systemd()
+    web_info = _check_plex_web()
 
-    systemd_info = _get_plex_from_systemd()
-    if systemd_info:
-        return systemd_info
+    if not service_info:
+        return {
+            "found": False,
+            "service": f"{PLEX_SERVICE_NAME}.service",
+            "status": "not_found",
+            "uptime": {"seconds": 0, "formatted": "—"},
+            "web": web_info,
+        }
 
     return {
-        "found": False,
-        "source": None,
-        "name": None,
-        "status": "not_found",
-        "uptime": {"seconds": 0, "formatted": "—"},
-        "resources": {"cpu_percent": 0.0, "memory_bytes": 0, "memory_limit": 0},
+        **service_info,
+        "web": web_info,
     }
 
 

@@ -332,6 +332,14 @@ body {
   padding: 1rem 0;
 }
 
+.plex-web--ok {
+  color: var(--green);
+}
+
+.plex-web--fail {
+  color: var(--red);
+}
+
 @media (max-width: 600px) {
   .header {
     flex-direction: column;

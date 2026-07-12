@@ -40,10 +40,12 @@ function updateConnection(ok) {
 }
 
 function renderPlex(plex) {
-  const section = $("plex-section");
   const grid = $("plex-grid");
   const empty = $("plex-empty");
   const badge = $("plex-status-badge");
+
+  const web = plex.web || {};
+  $("plex-port").textContent = web.port || 32400;
 
   if (!plex.found) {
     grid.hidden = true;
@@ -56,25 +58,24 @@ function renderPlex(plex) {
   grid.hidden = false;
   empty.hidden = true;
 
-  const isRunning = plex.status === "running" || plex.status === "active";
-  badge.textContent = plex.status;
-  badge.className = `status-badge ${statusBadgeClass(isRunning ? "running" : plex.status)}`;
+  const status = plex.status || "stopped";
+  const isRunning = status === "running";
 
-  $("plex-source").textContent = plex.source === "docker" ? "Docker" : "systemd";
-  $("plex-name").textContent = plex.name || "—";
-  $("plex-uptime").textContent = plex.uptime.formatted;
+  badge.textContent = status;
+  badge.className = `status-badge ${statusBadgeClass(isRunning ? "running" : "stopped")}`;
 
-  const res = plex.resources || {};
-  $("plex-cpu").textContent = `${res.cpu_percent ?? 0}%`;
-  $("plex-ram").textContent = formatBytes(res.memory_bytes || 0);
+  $("plex-service").textContent = plex.service || "plexmediaserver.service";
+  $("plex-status").textContent = isRunning ? "running" : "stopped";
+  $("plex-uptime").textContent = isRunning ? plex.uptime.formatted : "—";
 
-  if (plex.source === "docker") {
-    $("plex-extra").textContent = plex.image || plex.container_id || "—";
-  } else if (plex.systemd) {
-    $("plex-extra").textContent = `PID ${plex.systemd.main_pid || "—"}`;
+  if (web.available) {
+    $("plex-web").innerHTML = '<span class="plex-web--ok">Доступен</span>';
   } else {
-    $("plex-extra").textContent = "—";
+    $("plex-web").innerHTML = '<span class="plex-web--fail">Недоступен</span>';
   }
+
+  const pid = plex.systemd?.main_pid;
+  $("plex-pid").textContent = pid && pid > 0 ? pid : "—";
 }
 
 function renderMetrics(data) {

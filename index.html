@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Персональный сайт-визитка">
+  <title>Имя Фамилия — Визитка</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="header" id="header">
+    <nav class="nav container">
+      <a href="#" class="nav__logo">Визитка</a>
+      <button class="nav__toggle" id="nav-toggle" aria-label="Открыть меню">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <ul class="nav__menu" id="nav-menu">
+        <li><a href="#about" class="nav__link">Обо мне</a></li>
+        <li><a href="#skills" class="nav__link">Навыки</a></li>
+        <li><a href="#contact" class="nav__link">Контакты</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="hero">
+      <div class="hero__content container">
+        <p class="hero__greeting">Привет, я</p>
+        <h1 class="hero__title">Имя Фамилия</h1>
+        <p class="hero__subtitle">Веб-разработчик</p>
+        <p class="hero__description">
+          Создаю современные и удобные сайты. Открыт к новым проектам и сотрудничеству.
+        </p>
+        <div class="hero__actions">
+          <a href="#contact" class="btn btn--primary">Связаться</a>
+          <a href="#about" class="btn btn--outline">Узнать больше</a>
+        </div>
+      </div>
+      <div class="hero__avatar">
+        <div class="hero__avatar-circle">
+          <span>ИФ</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section about" id="about">
+      <div class="container">
+        <h2 class="section__title">Обо мне</h2>
+        <div class="about__grid">
+          <div class="about__text">
+            <p>
+              Я занимаюсь веб-разработкой и создаю сайты, которые сочетают
+              красивый дизайн с удобством использования.
+            </p>
+            <p>
+              Работаю с HTML, CSS, JavaScript и современными инструментами.
+              Люблю чистый код и внимание к деталям.
+            </p>
+          </div>
+          <ul class="about__facts">
+            <li class="about__fact">
+              <span class="about__fact-number">3+</span>
+              <span class="about__fact-label">года опыта</span>
+            </li>
+            <li class="about__fact">
+              <span class="about__fact-number">20+</span>
+              <span class="about__fact-label">проектов</span>
+            </li>
+            <li class="about__fact">
+              <span class="about__fact-number">100%</span>
+              <span class="about__fact-label">вовлечённость</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section skills" id="skills">
+      <div class="container">
+        <h2 class="section__title">Навыки</h2>
+        <div class="skills__grid">
+          <article class="skill-card">
+            <div class="skill-card__icon">HTML</div>
+            <h3 class="skill-card__title">Вёрстка</h3>
+            <p class="skill-card__text">Семантическая разметка, доступность, адаптивность</p>
+          </article>
+          <article class="skill-card">
+            <div class="skill-card__icon">CSS</div>
+            <h3 class="skill-card__title">Стилизация</h3>
+            <p class="skill-card__text">Flexbox, Grid, анимации, современный UI</p>
+          </article>
+          <article class="skill-card">
+            <div class="skill-card__icon">JS</div>
+            <h3 class="skill-card__title">JavaScript</h3>
+            <p class="skill-card__text">Интерактивность, DOM, работа с API</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section contact" id="contact">
+      <div class="container">
+        <h2 class="section__title">Контакты</h2>
+        <p class="contact__intro">Напишите мне — отвечу в ближайшее время.</p>
+        <form class="contact__form" id="contact-form" novalidate>
+          <div class="form__group">
+            <label for="name" class="form__label">Имя</label>
+            <input type="text" id="name" name="name" class="form__input" placeholder="Ваше имя" required>
+            <span class="form__error" id="name-error"></span>
+          </div>
+          <div class="form__group">
+            <label for="email" class="form__label">Email</label>
+            <input type="email" id="email" name="email" class="form__input" placeholder="email@example.com" required>
+            <span class="form__error" id="email-error"></span>
+          </div>
+          <div class="form__group">
+            <label for="message" class="form__label">Сообщение</label>
+            <textarea id="message" name="message" class="form__input form__textarea" rows="4" placeholder="Ваше сообщение" required></textarea>
+            <span class="form__error" id="message-error"></span>
+          </div>
+          <button type="submit" class="btn btn--primary btn--full">Отправить</button>
+        </form>
+        <div class="contact__links">
+          <a href="mailto:hello@example.com" class="contact__link">hello@example.com</a>
+          <a href="https://github.com" class="contact__link" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a href="https://t.me" class="contact__link" target="_blank" rel="noopener noreferrer">Telegram</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; <span id="year"></span> Имя Фамилия. Все права защищены.</p>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast" role="alert" aria-live="polite"></div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

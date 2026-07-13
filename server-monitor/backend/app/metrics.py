@@ -79,7 +79,11 @@ def get_media_disk() -> dict | None:
 
     try:
         usage = psutil.disk_usage(MEDIA_MOUNT)
+        root_usage = psutil.disk_usage("/")
     except OSError:
+        return None
+
+    if usage.total == root_usage.total and usage.used == root_usage.used:
         return None
 
     return {

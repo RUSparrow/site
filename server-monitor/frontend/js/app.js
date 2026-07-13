@@ -96,8 +96,11 @@ function renderMetrics(data) {
   $("disk-meta").textContent = `${formatBytes(disk.used)} / ${formatBytes(disk.total)}`;
 
   const media = data.media_disk;
-  $("card-media").hidden = !media;
-  if (media) {
+  const mediaCard = $("card-media");
+  if (mediaCard) {
+    mediaCard.hidden = !media;
+  }
+  if (media && mediaCard) {
     $("media-value").textContent = `${media.percent}%`;
     setProgressBar($("media-bar"), media.percent);
     $("media-meta").textContent = `${formatBytes(media.used)} / ${formatBytes(media.total)}`;

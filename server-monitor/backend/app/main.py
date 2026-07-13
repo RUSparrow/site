@@ -62,7 +62,7 @@ def update_status():
 def update_status_page():
     status_file = FRONTEND_DIR / "update-status.html"
     if status_file.exists():
-        return FileResponse(status_file)
+        return FileResponse(status_file, headers={"Cache-Control": "no-store"})
     return {"message": "Update status page is unavailable"}
 
 
@@ -70,5 +70,5 @@ def update_status_page():
 def index():
     index_file = FRONTEND_DIR / "index.html"
     if index_file.exists():
-        return FileResponse(index_file)
+        return FileResponse(index_file, headers={"Cache-Control": "no-store"})
     return {"message": "Server Monitor API", "docs": "/docs"}

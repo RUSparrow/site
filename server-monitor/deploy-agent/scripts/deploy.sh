@@ -2,6 +2,8 @@
 
 cd /home/sparrow/site
 
+git config --global --add safe.directory /home/sparrow/site
+
 git pull
 
 cd /home/sparrow/site/server-monitor

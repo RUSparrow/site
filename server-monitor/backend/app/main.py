@@ -1,7 +1,9 @@
 import os
 from pathlib import Path
 
+import requests
 from fastapi import FastAPI
+from fastapi import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -9,13 +11,14 @@ from fastapi.staticfiles import StaticFiles
 from app.metrics import collect_all
 
 FRONTEND_DIR = Path(os.getenv("FRONTEND_DIR", Path(__file__).resolve().parent.parent.parent / "frontend"))
+DEPLOY_AGENT_URL = os.getenv("DEPLOY_AGENT_URL", "http://deploy-agent:9000")
 
 app = FastAPI(title="Server Monitor", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 
@@ -31,6 +34,17 @@ def health():
 @app.get("/api/metrics")
 def metrics():
     return collect_all()
+
+
+@app.post("/api/actions/update")
+def update_project():
+    try:
+        response = requests.post(f"{DEPLOY_AGENT_URL}/update", timeout=5)
+        response.raise_for_status()
+    except requests.RequestException as exc:
+        raise HTTPException(status_code=503, detail="Сервис обновления недоступен") from exc
+
+    return response.json()
 
 
 @app.get("/")

@@ -1,4 +1,16 @@
 services:
+  deploy-agent:
+    build:
+      context: .
+      dockerfile: deploy-agent/Dockerfile
+    container_name: deploy-agent
+    ports:
+      - "9000:9000"
+    volumes:
+      - /home/sparrow/site:/home/sparrow/site
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+
   monitor:
     build:
       context: .
@@ -20,3 +32,4 @@ services:
       - DBUS_SYSTEM_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket
       - PLEX_WEB_HOST=host.docker.internal
       - PLEX_WEB_PORT=32400
+      - DEPLOY_AGENT_URL=http://deploy-agent:9000

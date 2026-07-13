@@ -1,5 +1,6 @@
 const REFRESH_INTERVAL = 5000;
 const API_URL = "/api/metrics";
+const UPDATE_API_URL = "/api/actions/update";
 
 const $ = (id) => document.getElementById(id);
 
@@ -161,5 +162,22 @@ async function fetchMetrics() {
   }
 }
 
+async function updateProject() {
+  const button = $("update-project");
+  button.disabled = true;
+
+  try {
+    const res = await fetch(UPDATE_API_URL, { method: "POST" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    alert((await res.json()).message);
+  } catch (err) {
+    console.error("Project update error:", err);
+    alert("Не удалось запустить обновление");
+  } finally {
+    button.disabled = false;
+  }
+}
+
+$("update-project").addEventListener("click", updateProject);
 fetchMetrics();
 setInterval(fetchMetrics, REFRESH_INTERVAL);

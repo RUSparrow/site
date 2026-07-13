@@ -11,7 +11,6 @@
     <header class="header">
       <div class="header__left">
         <h1 class="header__title">Server Monitor</h1>
-        <p class="header__hostname" id="hostname">—</p>
       </div>
       <div class="header__right">
         <button class="update-button" id="update-project" type="button">Обновить проект</button>
@@ -25,7 +24,6 @@
       <article class="metric-card" id="card-cpu">
         <div class="metric-card__header">
           <span class="metric-card__icon">CPU</span>
-          <h2 class="metric-card__title">Процессор</h2>
         </div>
         <div class="metric-card__value" id="cpu-value">—</div>
         <div class="progress">
@@ -37,7 +35,6 @@
       <article class="metric-card" id="card-ram">
         <div class="metric-card__header">
           <span class="metric-card__icon">RAM</span>
-          <h2 class="metric-card__title">Память</h2>
         </div>
         <div class="metric-card__value" id="ram-value">—</div>
         <div class="progress">
@@ -49,7 +46,6 @@
       <article class="metric-card" id="card-disk">
         <div class="metric-card__header">
           <span class="metric-card__icon">DISK</span>
-          <h2 class="metric-card__title">Диск</h2>
         </div>
         <div class="metric-card__value" id="disk-value">—</div>
         <div class="progress">
@@ -58,22 +54,29 @@
         <p class="metric-card__meta" id="disk-meta">—</p>
       </article>
 
+      <article class="metric-card" id="card-media" hidden>
+        <div class="metric-card__header">
+          <span class="metric-card__icon">MEDIA</span>
+        </div>
+        <div class="metric-card__value" id="media-value">—</div>
+        <div class="progress">
+          <div class="progress__bar" id="media-bar"></div>
+        </div>
+        <p class="metric-card__meta" id="media-meta">—</p>
+      </article>
+
       <article class="metric-card metric-card--info" id="card-uptime">
         <div class="metric-card__header">
           <span class="metric-card__icon">UP</span>
-          <h2 class="metric-card__title">Uptime</h2>
         </div>
         <div class="metric-card__value metric-card__value--large" id="uptime-value">—</div>
-        <p class="metric-card__meta">Время с последней перезагрузки</p>
       </article>
 
       <article class="metric-card metric-card--info" id="card-temp">
         <div class="metric-card__header">
           <span class="metric-card__icon">TEMP</span>
-          <h2 class="metric-card__title">Температура</h2>
         </div>
         <div class="metric-card__value metric-card__value--large" id="temp-value">—</div>
-        <p class="metric-card__meta" id="temp-meta">—</p>
       </article>
     </section>
 

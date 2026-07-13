@@ -15,6 +15,7 @@ SYSFS_PATH = Path(os.getenv("SYSFS_PATH", "/sys"))
 PLEX_SERVICE_NAME = "plexmediaserver"
 PLEX_WEB_HOST = os.getenv("PLEX_WEB_HOST", "127.0.0.1")
 PLEX_WEB_PORT = int(os.getenv("PLEX_WEB_PORT", "32400"))
+MEDIA_MOUNT = Path(os.getenv("MEDIA_MOUNT", "/media"))
 
 
 def _format_uptime(seconds: float) -> str:
@@ -37,8 +38,18 @@ def get_cpu() -> dict:
     return {
         "percent": round(psutil.cpu_percent(interval=0.1), 1),
         "cores": psutil.cpu_count(logical=True) or 0,
-        "load_avg": [round(x, 2) for x in os.getloadavg()],
+        "model": _get_cpu_model(),
     }
+
+
+def _get_cpu_model() -> str:
+    try:
+        for line in Path("/proc/cpuinfo").read_text(encoding="utf-8").splitlines():
+            if line.startswith(("model name", "Hardware", "Processor")) and ":" in line:
+                return line.split(":", 1)[1].strip()
+    except OSError:
+        pass
+    return "CPU"
 
 
 def get_memory() -> dict:
@@ -59,6 +70,23 @@ def get_disk() -> dict:
         "free": usage.free,
         "percent": round(usage.percent, 1),
         "mount": "/",
+    }
+
+
+def get_media_disk() -> dict | None:
+    if not MEDIA_MOUNT.is_dir():
+        return None
+
+    try:
+        usage = psutil.disk_usage(MEDIA_MOUNT)
+    except OSError:
+        return None
+
+    return {
+        "total": usage.total,
+        "used": usage.used,
+        "free": usage.free,
+        "percent": round(usage.percent, 1),
     }
 
 
@@ -276,6 +304,7 @@ def collect_all() -> dict:
         "cpu": get_cpu(),
         "memory": get_memory(),
         "disk": get_disk(),
+        "media_disk": get_media_disk(),
         "uptime": get_uptime(),
         "temperature": get_temperature(),
         "docker": get_docker_containers(),

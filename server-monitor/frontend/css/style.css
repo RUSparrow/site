@@ -118,11 +118,13 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 1.25rem;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
 .metric-card:hover {
   border-color: #334155;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
 }
 
 .metric-card__header {
@@ -172,11 +174,23 @@ body {
 }
 
 .progress__bar {
+  position: relative;
   height: 100%;
   width: 0%;
   border-radius: 3px;
   background: var(--accent);
   transition: width 0.5s ease, background 0.3s;
+}
+
+.progress__bar::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 35%;
+  content: "";
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  animation: progress-shine 1.8s ease-in-out infinite;
 }
 
 .progress__bar--warn {
@@ -185,6 +199,11 @@ body {
 
 .progress__bar--danger {
   background: var(--red);
+}
+
+@keyframes progress-shine {
+  from { transform: translateX(110%); }
+  to { transform: translateX(-320%); }
 }
 
 /* Docker section */

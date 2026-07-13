@@ -25,6 +25,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /proc:/proc:ro
       - /sys:/sys:ro
+      - /media:/media:ro
       - /run/dbus/system_bus_socket:/run/dbus/system_bus_socket:ro
     pid: host
     restart: unless-stopped
@@ -34,3 +35,4 @@ services:
       - PLEX_WEB_HOST=host.docker.internal
       - PLEX_WEB_PORT=32400
       - DEPLOY_AGENT_URL=http://deploy-agent:9000
+      - MEDIA_MOUNT=/media

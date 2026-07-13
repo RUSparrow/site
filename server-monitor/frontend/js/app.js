@@ -1,4 +1,4 @@
-const REFRESH_INTERVAL = 5000;
+const REFRESH_INTERVAL = 3000;
 const API_URL = "/api/metrics";
 const UPDATE_API_URL = "/api/actions/update";
 
@@ -80,12 +80,10 @@ function renderPlex(plex) {
 }
 
 function renderMetrics(data) {
-  $("hostname").textContent = data.hostname || "—";
-
   const cpu = data.cpu;
   $("cpu-value").textContent = `${cpu.percent}%`;
   setProgressBar($("cpu-bar"), cpu.percent);
-  $("cpu-meta").textContent = `${cpu.cores} ядер · load ${cpu.load_avg.join(" / ")}`;
+  $("cpu-meta").textContent = `${cpu.cores} ядер · ${cpu.model}`;
 
   const mem = data.memory;
   $("ram-value").textContent = `${mem.percent}%`;
@@ -95,17 +93,23 @@ function renderMetrics(data) {
   const disk = data.disk;
   $("disk-value").textContent = `${disk.percent}%`;
   setProgressBar($("disk-bar"), disk.percent);
-  $("disk-meta").textContent = `${formatBytes(disk.used)} / ${formatBytes(disk.total)} (${disk.mount})`;
+  $("disk-meta").textContent = `${formatBytes(disk.used)} / ${formatBytes(disk.total)}`;
+
+  const media = data.media_disk;
+  $("card-media").hidden = !media;
+  if (media) {
+    $("media-value").textContent = `${media.percent}%`;
+    setProgressBar($("media-bar"), media.percent);
+    $("media-meta").textContent = `${formatBytes(media.used)} / ${formatBytes(media.total)}`;
+  }
 
   $("uptime-value").textContent = data.uptime.formatted;
 
   const temp = data.temperature;
   if (temp) {
     $("temp-value").textContent = `${temp.celsius}°C`;
-    $("temp-meta").textContent = temp.label;
   } else {
     $("temp-value").textContent = "N/A";
-    $("temp-meta").textContent = "Датчик недоступен";
   }
 
   renderPlex(data.plex || { found: false });

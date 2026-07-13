@@ -121,6 +121,10 @@ body {
   transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
+.metrics-grid__dynamic {
+  display: contents;
+}
+
 .metric-card:hover {
   border-color: #334155;
   transform: translateY(-2px);
@@ -163,6 +167,7 @@ body {
   font-size: 0.8rem;
   color: var(--text-muted);
   margin-top: 0.5rem;
+  white-space: pre-line;
 }
 
 /* Progress bar */

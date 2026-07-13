@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Server Monitor</title>
-  <link rel="stylesheet" href="/static/css/style.css?v=2">
+  <link rel="stylesheet" href="/static/css/style.css?v=3">
 </head>
 <body>
   <div class="dashboard">
@@ -54,27 +54,18 @@
         <p class="metric-card__meta" id="disk-meta">—</p>
       </article>
 
-      <article class="metric-card" id="card-media" hidden>
-        <div class="metric-card__header">
-          <span class="metric-card__icon">MEDIA</span>
-        </div>
-        <div class="metric-card__value" id="media-value">—</div>
-        <div class="progress">
-          <div class="progress__bar" id="media-bar"></div>
-        </div>
-        <p class="metric-card__meta" id="media-meta">—</p>
-      </article>
+      <div class="metrics-grid__dynamic" id="storage-disks"></div>
 
       <article class="metric-card metric-card--info" id="card-uptime">
         <div class="metric-card__header">
-          <span class="metric-card__icon">UP</span>
+          <span class="metric-card__icon">UPTIME</span>
         </div>
         <div class="metric-card__value metric-card__value--large" id="uptime-value">—</div>
       </article>
 
       <article class="metric-card metric-card--info" id="card-temp">
         <div class="metric-card__header">
-          <span class="metric-card__icon">TEMP</span>
+          <span class="metric-card__icon">PC TEMP</span>
         </div>
         <div class="metric-card__value metric-card__value--large" id="temp-value">—</div>
       </article>
@@ -140,6 +131,6 @@
     </section>
   </div>
 
-  <script src="/static/js/app.js?v=2"></script>
+  <script src="/static/js/app.js?v=3"></script>
 </body>
 </html>

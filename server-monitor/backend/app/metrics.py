@@ -15,7 +15,12 @@ SYSFS_PATH = Path(os.getenv("SYSFS_PATH", "/sys"))
 PLEX_SERVICE_NAME = "plexmediaserver"
 PLEX_WEB_HOST = os.getenv("PLEX_WEB_HOST", "127.0.0.1")
 PLEX_WEB_PORT = int(os.getenv("PLEX_WEB_PORT", "32400"))
-MEDIA_MOUNT = Path(os.getenv("MEDIA_MOUNT", "/media"))
+ROOT_BLOCK_DEVICE = os.getenv("ROOT_BLOCK_DEVICE", "sdc")
+STORAGE_DISKS = tuple(
+    entry.split(":", 1)
+    for entry in os.getenv("STORAGE_DISKS", "sda:/mnt/disk1,sdb:/mnt/disk2").split(",")
+    if ":" in entry
+)
 
 
 def _format_uptime(seconds: float) -> str:
@@ -25,12 +30,12 @@ def _format_uptime(seconds: float) -> str:
     minutes, secs = divmod(rem, 60)
     parts = []
     if days:
-        parts.append(f"{days}д")
+        parts.append(f"{days}d")
     if hours:
-        parts.append(f"{hours}ч")
+        parts.append(f"{hours}h")
     if minutes:
-        parts.append(f"{minutes}м")
-    parts.append(f"{secs}с")
+        parts.append(f"{minutes}m")
+    parts.append(f"{secs}s")
     return " ".join(parts)
 
 
@@ -62,28 +67,31 @@ def get_memory() -> dict:
     }
 
 
-def get_disk() -> dict:
-    usage = psutil.disk_usage("/")
-    return {
-        "total": usage.total,
-        "used": usage.used,
-        "free": usage.free,
-        "percent": round(usage.percent, 1),
-        "mount": "/",
-    }
+def _get_block_device_info(device: str) -> dict:
+    device_dir = SYSFS_PATH / "class" / "block" / device
+    model_file = device_dir / "device" / "model"
+    size_file = device_dir / "size"
+
+    try:
+        model = model_file.read_text().strip()
+    except OSError:
+        model = device.upper()
+
+    try:
+        nominal_total = int(size_file.read_text().strip()) * 512
+    except (OSError, ValueError):
+        nominal_total = None
+
+    return {"device": device, "model": model, "nominal_total": nominal_total}
 
 
-def get_media_disk() -> dict | None:
-    if not MEDIA_MOUNT.is_dir():
+def _get_disk(mount: Path, device: str) -> dict | None:
+    if not mount.is_dir():
         return None
 
     try:
-        usage = psutil.disk_usage(MEDIA_MOUNT)
-        root_usage = psutil.disk_usage("/")
+        usage = psutil.disk_usage(mount)
     except OSError:
-        return None
-
-    if usage.total == root_usage.total and usage.used == root_usage.used:
         return None
 
     return {
@@ -91,7 +99,22 @@ def get_media_disk() -> dict | None:
         "used": usage.used,
         "free": usage.free,
         "percent": round(usage.percent, 1),
+        "mount": str(mount),
+        **_get_block_device_info(device),
     }
+
+
+def get_disk() -> dict:
+    return _get_disk(Path("/"), ROOT_BLOCK_DEVICE) or {}
+
+
+def get_storage_disks() -> list[dict]:
+    disks = []
+    for device, mount in STORAGE_DISKS:
+        disk = _get_disk(Path(mount), device)
+        if disk:
+            disks.append(disk)
+    return disks
 
 
 def get_uptime() -> dict:
@@ -308,7 +331,7 @@ def collect_all() -> dict:
         "cpu": get_cpu(),
         "memory": get_memory(),
         "disk": get_disk(),
-        "media_disk": get_media_disk(),
+        "storage_disks": get_storage_disks(),
         "uptime": get_uptime(),
         "temperature": get_temperature(),
         "docker": get_docker_containers(),

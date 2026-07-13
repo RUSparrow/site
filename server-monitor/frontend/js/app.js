@@ -21,6 +21,45 @@ function setProgressBar(barEl, percent) {
   }
 }
 
+function diskMeta(disk) {
+  const nominal = disk.nominal_total ? ` · ${formatBytes(disk.nominal_total)}` : "";
+  return `${formatBytes(disk.used)} / ${formatBytes(disk.total)}\n${disk.model}${nominal}`;
+}
+
+function renderStorageDisks(disks) {
+  const container = $("storage-disks");
+  container.replaceChildren();
+
+  for (const disk of disks) {
+    const card = document.createElement("article");
+    card.className = "metric-card";
+
+    const header = document.createElement("div");
+    header.className = "metric-card__header";
+    const icon = document.createElement("span");
+    icon.className = "metric-card__icon";
+    icon.textContent = disk.device.toUpperCase();
+    header.append(icon);
+
+    const value = document.createElement("div");
+    value.className = "metric-card__value";
+    value.textContent = `${disk.percent}%`;
+
+    const progress = document.createElement("div");
+    progress.className = "progress";
+    const bar = document.createElement("div");
+    bar.className = "progress__bar";
+    setProgressBar(bar, disk.percent);
+    progress.append(bar);
+
+    const meta = document.createElement("p");
+    meta.className = "metric-card__meta";
+    meta.textContent = diskMeta(disk);
+    card.append(header, value, progress, meta);
+    container.append(card);
+  }
+}
+
 function statusBadgeClass(status) {
   const map = {
     running: "status-badge--running",
@@ -85,6 +124,8 @@ function renderMetrics(data) {
   setProgressBar($("cpu-bar"), cpu.percent);
   $("cpu-meta").textContent = `${cpu.cores} ядер · ${cpu.model}`;
 
+  $("cpu-meta").textContent = `${cpu.model}\n${cpu.cores} cores`;
+
   const mem = data.memory;
   $("ram-value").textContent = `${mem.percent}%`;
   setProgressBar($("ram-bar"), mem.percent);
@@ -95,16 +136,9 @@ function renderMetrics(data) {
   setProgressBar($("disk-bar"), disk.percent);
   $("disk-meta").textContent = `${formatBytes(disk.used)} / ${formatBytes(disk.total)}`;
 
-  const media = data.media_disk;
-  const mediaCard = $("card-media");
-  if (mediaCard) {
-    mediaCard.hidden = !media;
-  }
-  if (media && mediaCard) {
-    $("media-value").textContent = `${media.percent}%`;
-    setProgressBar($("media-bar"), media.percent);
-    $("media-meta").textContent = `${formatBytes(media.used)} / ${formatBytes(media.total)}`;
-  }
+  $("disk-meta").textContent = diskMeta(disk);
+
+  renderStorageDisks(data.storage_disks || []);
 
   $("uptime-value").textContent = data.uptime.formatted;
 

@@ -8,6 +8,7 @@ services:
       - "9000:9000"
     volumes:
       - /home/sparrow/site:/home/sparrow/site
+      - /home/sparrow/.ssh:/root/.ssh:ro
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
 

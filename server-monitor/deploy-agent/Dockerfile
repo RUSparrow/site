@@ -4,6 +4,7 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     docker.io \
+    docker-compose-v2 \
     git \
     && rm -rf /var/lib/apt/lists/*
 

@@ -165,16 +165,19 @@ async function fetchMetrics() {
 async function updateProject() {
   const button = $("update-project");
   button.disabled = true;
+  button.textContent = "Запуск...";
 
   try {
     const res = await fetch(UPDATE_API_URL, { method: "POST" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    alert((await res.json()).message);
+    const data = await res.json();
+    if (data.status !== "started") throw new Error("Update was not started");
+    window.location.href = "/update-status";
   } catch (err) {
     console.error("Project update error:", err);
     alert("Не удалось запустить обновление");
-  } finally {
     button.disabled = false;
+    button.textContent = "Обновить проект";
   }
 }
 

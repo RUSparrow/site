@@ -47,6 +47,25 @@ def update_project():
     return response.json()
 
 
+@app.get("/api/actions/status")
+def update_status():
+    try:
+        response = requests.get(f"{DEPLOY_AGENT_URL}/status", timeout=5)
+        response.raise_for_status()
+    except requests.RequestException as exc:
+        raise HTTPException(status_code=503, detail="Сервис обновления недоступен") from exc
+
+    return response.json()
+
+
+@app.get("/update-status")
+def update_status_page():
+    status_file = FRONTEND_DIR / "update-status.html"
+    if status_file.exists():
+        return FileResponse(status_file)
+    return {"message": "Update status page is unavailable"}
+
+
 @app.get("/")
 def index():
     index_file = FRONTEND_DIR / "index.html"

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Обновление системы</title>
+  <link rel="stylesheet" href="/static/css/update-status.css">
+</head>
+<body>
+  <main class="update-page">
+    <section class="update-card" aria-live="polite">
+      <div class="spinner" aria-hidden="true"></div>
+      <h1>Обновление системы</h1>
+      <p id="update-message">Пожалуйста, подождите...</p>
+      <p class="update-state" id="update-state">Запуск обновления</p>
+      <a class="back-button" id="back-button" href="/" hidden>Вернуться к мониторингу</a>
+    </section>
+  </main>
+  <script src="/static/js/update-status.js"></script>
+</body>
+</html>

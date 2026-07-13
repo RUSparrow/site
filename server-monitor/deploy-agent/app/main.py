@@ -42,12 +42,10 @@ def wait_for_update(process):
 
 
 @app.on_event("startup")
-def recover_completed_update():
-    # docker compose may recreate this agent as the last step of a successful update.
-    # The persisted state lets the new container finish the status transition.
+def mark_interrupted_update():
     with status_lock:
         if read_status().get("status") == "running":
-            write_status("completed")
+            write_status("error", "Обновление было прервано перезапуском deploy-agent")
 
 
 @app.post("/update")

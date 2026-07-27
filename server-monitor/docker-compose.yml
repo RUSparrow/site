@@ -38,3 +38,16 @@ services:
       - DEPLOY_AGENT_URL=http://deploy-agent:9000
       - ROOT_BLOCK_DEVICE=sdc
       - STORAGE_DISKS=sda:/mnt/disk1,sdb:/mnt/disk2
+  duckdns:
+    image: lscr.io/linuxserver/duckdns:latest
+    container_name: duckdns
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Tallinn
+      - SUBDOMAINS=rusparrow
+      - TOKEN=ТВОЙ_ТОКЕН
+      - LOG_FILE=true
+    volumes:
+      - ./vpn/duckdns:/config
+    restart: unless-stopped

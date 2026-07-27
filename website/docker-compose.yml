@@ -6,4 +6,4 @@ services:
       - "8081:80"
     volumes:
       - ./html:/usr/share/nginx/html:ro
-    restart: unless-stoppedcd
+    restart: unless-stopped

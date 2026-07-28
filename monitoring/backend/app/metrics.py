@@ -363,13 +363,14 @@ def get_wireguard_status() -> dict:
 
         peers = []
 
-        for line in lines[1:]:
+        for index, line in enumerate(lines[1:], start=1):
             fields = line.split("\t")
 
             if len(fields) < 8:
                 continue
 
             peers.append({
+                "name": f"peer{index}",
                 "public_key": fields[0],
                 "endpoint": None if fields[2] == "(none)" else fields[2],
                 "ip": fields[3],

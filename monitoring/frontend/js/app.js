@@ -160,25 +160,43 @@ function renderWireguard(wg) {
   }
 
 
-  tbody.innerHTML = wg.peers.map(peer => {
+tbody.innerHTML = wg.peers.map(peer => {
 
-    const shortKey =
-      peer.public_key
-        ? peer.public_key.substring(0, 12) + "..."
-        : "—";
+  const shortKey =
+    peer.public_key
+      ? peer.public_key.substring(0, 12) + "..."
+      : "—";
 
+  const name = peer.name || "peer";
 
-    return `
-      <tr>
-        <td><code>${shortKey}</code></td>
-        <td>${peer.endpoint || "offline"}</td>
-        <td>${peer.handshake || "—"}</td>
-        <td>${peer.transfer || "—"}</td>
-      </tr>
-    `;
+  return `
+    <tr>
+      <td>
+        <b>${name}</b><br>
+        <code>${shortKey}</code>
+      </td>
 
-  }).join("");
-}
+      <td>
+        ${peer.endpoint || "offline"}
+        <br>
+        <small>${peer.ip || ""}</small>
+      </td>
+
+      <td>
+        ${peer.handshake && peer.handshake !== 0
+          ? formatHandshake(peer.handshake)
+          : "—"}
+      </td>
+
+      <td>
+        ↓ ${formatBytes(peer.received_bytes || 0)}
+        <br>
+        ↑ ${formatBytes(peer.sent_bytes || 0)}
+      </td>
+    </tr>
+  `;
+
+}).join("");
 
 function renderMetrics(data) {
   const cpu = data.cpu;
@@ -213,7 +231,7 @@ function renderMetrics(data) {
 
   renderPlex(data.plex || { found: false });
   renderWireguard(data.wireguard || {});
-  
+
   const docker = data.docker;
   const tbody = $("docker-tbody");
   const errorEl = $("docker-error");
@@ -264,6 +282,28 @@ async function fetchMetrics() {
     updateConnection(false);
     console.error("Metrics fetch error:", err);
   }
+}
+
+function formatHandshake(timestamp) {
+  if (!timestamp || timestamp === 0) {
+    return "—";
+  }
+
+  const diff = Math.floor(Date.now() / 1000 - timestamp);
+
+  if (diff < 60) {
+    return `${diff} сек назад`;
+  }
+
+  if (diff < 3600) {
+    return `${Math.floor(diff / 60)} мин назад`;
+  }
+
+  if (diff < 86400) {
+    return `${Math.floor(diff / 3600)} ч назад`;
+  }
+
+  return `${Math.floor(diff / 86400)} дн назад`;
 }
 
 async function updateProject() {

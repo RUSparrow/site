@@ -105,63 +105,37 @@
       <p class="plex-empty" id="plex-empty" hidden>Сервис plexmediaserver.service не найден</p>
     </section>
     
-    <section class="wireguard-section">
-      <div class="wireguard-section__header">
-        <h2 class="wireguard-section__title">WireGuard VPN</h2>
-        <span class="status-badge" id="wireguard-status">—</span>
-      </div>
+<section class="wireguard-section">
+  <div class="wireguard-section__header">
+    <h2 class="wireguard-section__title">WireGuard VPN</h2>
+    <span class="status-badge" id="wireguard-status">—</span>
+  </div>
 
-      <div class="wireguard-info">
-        <div class="plex-stat">
-          <span class="plex-stat__label">Клиенты</span>
-          <span class="plex-stat__value" id="wireguard-count">—</span>
-        </div>
-      </div>
+  <div class="wireguard-info">
+    <div class="plex-stat">
+      <span class="plex-stat__label">Clients</span>
+      <span class="plex-stat__value" id="wireguard-count">—</span>
+    </div>
+  </div>
 
-      <div class="table-wrap">
-        <table class="docker-table">
-          <thead>
-            <tr>
-              <th>Ключ</th>
-              <th>Endpoint</th>
-              <th>Handshake</th>
-              <th>Трафик</th>
-            </tr>
-          </thead>
-          <tbody id="wireguard-tbody">
-            <tr>
-              <td colspan="4">Загрузка...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-      <div class="wireguard-info">
-        <div class="plex-stat">
-          <span class="plex-stat__label">Клиенты</span>
-          <span class="plex-stat__value" id="wireguard-count">—</span>
-        </div>
-      </div>
-
-      <div class="table-wrap">
-        <table class="docker-table">
-          <thead>
-            <tr>
-              <th>Ключ</th>
-              <th>Endpoint</th>
-              <th>Handshake</th>
-              <th>Трафик</th>
-            </tr>
-          </thead>
-          <tbody id="wireguard-tbody">
-            <tr>
-              <td colspan="4">Загрузка...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
+  <div class="table-wrap">
+    <table class="wireguard-table">
+      <thead>
+        <tr>
+          <th>Key</th>
+          <th>Endpoint</th>
+          <th>Handshake</th>
+          <th>Traffic</th>
+        </tr>
+      </thead>
+      <tbody id="wireguard-tbody">
+        <tr>
+          <td colspan="4">Загрузка...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
 
     <section class="docker-section">
       <div class="docker-section__header">
@@ -169,7 +143,7 @@
         <span class="docker-section__count" id="docker-count">0</span>
       </div>
       <div class="table-wrap">
-        <table class="docker-table">
+        <table class="wireguard-table">
           <thead>
             <tr>
               <th>Имя</th>

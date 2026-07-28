@@ -336,29 +336,28 @@ def get_plex_status() -> dict:
 
 def get_wireguard_status() -> dict:
     try:
-        result = subprocess.run(
-            [
-                "docker",
-                "exec",
-                "wireguard",
-                "wg",
-                "show"
-            ],
-            capture_output=True,
-            text=True,
-            timeout=5
+        client = docker.from_env()
+
+        container = client.containers.get("wireguard")
+
+        result = container.exec_run(
+            ["wg", "show"],
+            stdout=True,
+            stderr=True
         )
 
-        if result.returncode != 0:
+        if result.exit_code != 0:
             return {
                 "available": False,
-                "error": result.stderr.strip()
+                "error": result.output.decode(errors="ignore")
             }
+
+        output = result.output.decode(errors="ignore")
 
         peers = []
         current = {}
 
-        for line in result.stdout.splitlines():
+        for line in output.splitlines():
             line = line.strip()
 
             if line.startswith("peer:"):

@@ -118,6 +118,68 @@ function renderPlex(plex) {
   $("plex-pid").textContent = pid && pid > 0 ? pid : "—";
 }
 
+function renderWireguard(wg) {
+  const badge = $("wireguard-status");
+  const count = $("wireguard-count");
+  const tbody = $("wireguard-tbody");
+
+
+  if (!wg || !wg.available) {
+    badge.textContent = "ошибка";
+    badge.className = "status-badge status-badge--exited";
+
+    count.textContent = "—";
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="4">
+          WireGuard недоступен
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+
+  badge.textContent = "running";
+  badge.className = "status-badge status-badge--running";
+
+
+  count.textContent = wg.count;
+
+
+  if (!wg.peers.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="4">
+          Нет подключенных клиентов
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+
+  tbody.innerHTML = wg.peers.map(peer => {
+
+    const shortKey =
+      peer.public_key
+        ? peer.public_key.substring(0, 12) + "..."
+        : "—";
+
+
+    return `
+      <tr>
+        <td><code>${shortKey}</code></td>
+        <td>${peer.endpoint || "offline"}</td>
+        <td>${peer.handshake || "—"}</td>
+        <td>${peer.transfer || "—"}</td>
+      </tr>
+    `;
+
+  }).join("");
+}
+
 function renderMetrics(data) {
   const cpu = data.cpu;
   $("cpu-value").textContent = `${cpu.percent}%`;
@@ -150,7 +212,8 @@ function renderMetrics(data) {
   }
 
   renderPlex(data.plex || { found: false });
-
+  renderWireguard(data.wireguard || {});
+  
   const docker = data.docker;
   const tbody = $("docker-tbody");
   const errorEl = $("docker-error");

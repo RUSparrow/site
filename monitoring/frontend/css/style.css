@@ -389,3 +389,25 @@ body {
     font-size: 1.6rem;
   }
 }
+
+.wireguard-section {
+  margin-top: 20px;
+}
+
+
+.wireguard-section__header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:15px;
+}
+
+
+.wireguard-section__title {
+  margin:0;
+}
+
+
+.wireguard-info {
+  margin-bottom:15px;
+}

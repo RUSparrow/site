@@ -336,54 +336,72 @@ def get_plex_status() -> dict:
 
 def get_wireguard_status() -> dict:
     try:
-        client = docker.from_env()
-
-        container = client.containers.get("wireguard")
-
-        result = container.exec_run(
-            ["wg", "show"],
-            stdout=True,
-            stderr=True
+        result = subprocess.run(
+            [
+                "docker",
+                "exec",
+                "wireguard",
+                "wg",
+                "show",
+                "wg0",
+                "dump"
+            ],
+            capture_output=True,
+            text=True,
+            timeout=5
         )
 
-        if result.exit_code != 0:
+        if result.returncode != 0:
             return {
                 "available": False,
-                "error": result.output.decode(errors="ignore")
+                "error": result.stderr.strip()
             }
 
-        output = result.output.decode(errors="ignore")
-
         peers = []
-        current = {}
 
-        for line in output.splitlines():
-            line = line.strip()
+        lines = result.stdout.strip().splitlines()
 
-            if line.startswith("peer:"):
-                if current:
-                    peers.append(current)
+        # первая строка — сам сервер
+        for index, line in enumerate(lines[1:], start=1):
+            data = line.split("\t")
 
-                current = {
-                    "public_key": line.split(": ", 1)[1]
-                }
+            if len(data) < 8:
+                continue
 
-            elif line.startswith("endpoint:"):
-                current["endpoint"] = line.split(": ", 1)[1]
+            public_key = data[0]
+            endpoint = data[2]
+            allowed_ip = data[3]
+            handshake = int(data[4])
+            rx = int(data[5])
+            tx = int(data[6])
 
-            elif line.startswith("latest handshake:"):
-                current["handshake"] = line.split(": ", 1)[1]
+            online = handshake != 0 and (
+                time.time() - handshake < 180
+            )
 
-            elif line.startswith("transfer:"):
-                current["transfer"] = line.split(": ", 1)[1]
-
-        if current:
-            peers.append(current)
+            peers.append({
+                "name": f"peer{index}",
+                "public_key": public_key,
+                "ip": allowed_ip.replace("/32", ""),
+                "endpoint": endpoint if endpoint != "(none)" else None,
+                "online": online,
+                "handshake": (
+                    datetime.fromtimestamp(
+                        handshake,
+                        timezone.utc
+                    ).strftime("%Y-%m-%d %H:%M:%S UTC")
+                    if handshake
+                    else None
+                ),
+                "received": _format_bytes(rx),
+                "sent": _format_bytes(tx),
+            })
 
         return {
             "available": True,
+            "online": sum(1 for p in peers if p["online"]),
+            "total": len(peers),
             "peers": peers,
-            "count": len(peers)
         }
 
     except Exception as e:
@@ -391,6 +409,19 @@ def get_wireguard_status() -> dict:
             "available": False,
             "error": str(e)
         }
+
+def _format_bytes(value):
+    units = ["B", "KB", "MB", "GB", "TB"]
+
+    size = float(value)
+
+    for unit in units:
+        if size < 1024:
+            return f"{size:.2f} {unit}"
+
+        size /= 1024
+
+    return f"{size:.2f} PB"
 
 
 def collect_all() -> dict:

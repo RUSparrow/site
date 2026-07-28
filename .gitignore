@@ -1,0 +1,24 @@
+# WireGuard generated files
+vpn/wireguard/server/privatekey*
+vpn/wireguard/server/publickey*
+vpn/wireguard/wg_confs/*.conf
+vpn/wireguard/peer*/peer*.conf
+vpn/wireguard/peer*/privatekey*
+vpn/wireguard/peer*/publickey*
+vpn/wireguard/peer*/presharedkey*
+vpn/wireguard/**/*.png
+
+# DuckDNS logs
+vpn/duckdns/*.log
+vpn/duckdns/logrotate.*# WireGuard secrets
+vpn/duckdns/logrotate.status
+vpn/duckdns/logrotate.conf
+vpn/wireguard/wg_confs/*.conf
+vpn/wireguard/peer*/peer*.conf
+vpn/wireguard/peer*/privatekey*
+vpn/wireguard/peer*/publickey*
+vpn/wireguard/peer*/presharedkey*
+vpn/wireguard/**/*.png
+
+# DuckDNS token/config
+vpn/duckdns/config/

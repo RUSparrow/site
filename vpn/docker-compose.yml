@@ -17,16 +17,15 @@ services:
     container_name: wireguard
     cap_add:
       - NET_ADMIN
-      - SYS_MODULE
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Tallinn
       - SERVERURL=rusparrow.duckdns.org
       - SERVERPORT=51820
-      - PEERS=3
-      - PEERDNS=auto
-      - INTERNAL_SUBNET=10.13.13.0
+      - PEERS=7
+      - PEERDNS=8.8.8.8
+      - INTERNAL_SUBNET=10.13.13.0/24
     volumes:
       - ./wireguard:/config
       - /lib/modules:/lib/modules

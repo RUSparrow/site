@@ -12,6 +12,8 @@ from pathlib import Path
 import docker
 import psutil
 
+client = docker.from_env()
+
 SYSFS_PATH = Path(os.getenv("SYSFS_PATH", "/sys"))
 PLEX_SERVICE_NAME = "plexmediaserver"
 PLEX_WEB_HOST = os.getenv("PLEX_WEB_HOST", "127.0.0.1")
@@ -337,27 +339,21 @@ def get_plex_status() -> dict:
 
 def get_wireguard_status() -> dict:
     try:
-        result = subprocess.run(
-            [
-                "docker",
-                "exec",
-                "wireguard",
-                "wg",
-                "show",
-                "wg0",
-                "dump"
-            ],
-            capture_output=True,
-            text=True,
-            timeout=5
+        client = docker.from_env()
+
+        container = client.containers.get("wireguard")
+
+        result = container.exec_run(
+            ["wg", "show", "wg0", "dump"]
         )
 
-        if result.returncode != 0:
+        if result.exit_code != 0:
             return {
                 "available": False,
-                "error": result.stderr.strip()
+                "error": result.output.decode()
             }
-        lines = result.stdout.strip().splitlines()
+
+        lines = result.output.decode().strip().splitlines()
 
         if not lines:
             return {
@@ -367,40 +363,32 @@ def get_wireguard_status() -> dict:
 
         peers = []
 
-        # пропускаем первую строку - это интерфейс
         for line in lines[1:]:
             fields = line.split("\t")
 
             if len(fields) < 8:
                 continue
 
-            public_key = fields[0]
-            endpoint = fields[2]
-            allowed_ips = fields[3]
-            handshake = fields[4]
-            rx_bytes = int(fields[5])
-            tx_bytes = int(fields[6])
-
             peers.append({
-                "public_key": public_key,
-                "endpoint": None if endpoint == "(none)" else endpoint,
-                "ip": allowed_ips,
-                "handshake": int(handshake),
-                "received_bytes": rx_bytes,
-                "sent_bytes": tx_bytes,
-                "online": handshake != "0"
+                "public_key": fields[0],
+                "endpoint": None if fields[2] == "(none)" else fields[2],
+                "ip": fields[3],
+                "handshake": int(fields[4]),
+                "received_bytes": int(fields[5]),
+                "sent_bytes": int(fields[6]),
+                "online": fields[4] != "0"
             })
 
         return {
             "available": True,
-            "peers": peers,
-            "count": len(peers)
+            "count": len(peers),
+            "peers": peers
         }
 
-    except subprocess.TimeoutExpired:
+    except docker.errors.NotFound:
         return {
             "available": False,
-            "error": "WireGuard timeout"
+            "error": "WireGuard container not found"
         }
 
     except Exception as e:

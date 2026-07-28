@@ -29,6 +29,7 @@ services:
       - /mnt/disk2:/mnt/disk2:ro
       - /run/dbus/system_bus_socket:/run/dbus/system_bus_socket:ro
       - ../vpn/wireguard:/wireguard:ro
+      - /usr/bin/wg:/usr/bin/wg:ro
     pid: host
     restart: unless-stopped
     environment:

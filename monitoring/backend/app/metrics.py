@@ -335,16 +335,15 @@ def get_plex_status() -> dict:
 
 
 def get_wireguard_status() -> dict:
-    if not WIREGUARD_CONFIG.exists():
-        return {
-            "available": False,
-            "error": "WireGuard config not found",
-            "config": str(WIREGUARD_CONFIG)
-        }
-
     try:
         result = subprocess.run(
-            ["wg", "show", "wg0"],
+            [
+                "docker",
+                "exec",
+                "wireguard",
+                "wg",
+                "show"
+            ],
             capture_output=True,
             text=True,
             timeout=5
@@ -353,14 +352,13 @@ def get_wireguard_status() -> dict:
         if result.returncode != 0:
             return {
                 "available": False,
-                "error": result.stderr.strip() or "WireGuard interface unavailable"
+                "error": result.stderr.strip()
             }
 
         peers = []
         current = {}
 
         for line in result.stdout.splitlines():
-
             line = line.strip()
 
             if line.startswith("peer:"):
@@ -385,15 +383,8 @@ def get_wireguard_status() -> dict:
 
         return {
             "available": True,
-            "interface": "wg0",
             "peers": peers,
             "count": len(peers)
-        }
-
-    except FileNotFoundError:
-        return {
-            "available": False,
-            "error": "wg command not installed"
         }
 
     except Exception as e:

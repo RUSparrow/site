@@ -16,10 +16,18 @@ PLEX_SERVICE_NAME = "plexmediaserver"
 PLEX_WEB_HOST = os.getenv("PLEX_WEB_HOST", "127.0.0.1")
 PLEX_WEB_PORT = int(os.getenv("PLEX_WEB_PORT", "32400"))
 ROOT_BLOCK_DEVICE = os.getenv("ROOT_BLOCK_DEVICE", "sdc")
+
 STORAGE_DISKS = tuple(
     entry.split(":", 1)
     for entry in os.getenv("STORAGE_DISKS", "sda:/mnt/disk1,sdb:/mnt/disk2").split(",")
     if ":" in entry
+)
+
+WIREGUARD_CONFIG = Path(
+    os.getenv(
+        "WIREGUARD_CONFIG",
+        "/wireguard/wg_confs/wg0.conf"
+    )
 )
 
 
@@ -326,6 +334,75 @@ def get_plex_status() -> dict:
     }
 
 
+def get_wireguard_status() -> dict:
+    if not WIREGUARD_CONFIG.exists():
+        return {
+            "available": False,
+            "error": "WireGuard config not found",
+            "config": str(WIREGUARD_CONFIG)
+        }
+
+    try:
+        result = subprocess.run(
+            ["wg", "show", "wg0"],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+
+        if result.returncode != 0:
+            return {
+                "available": False,
+                "error": result.stderr.strip() or "WireGuard interface unavailable"
+            }
+
+        peers = []
+        current = {}
+
+        for line in result.stdout.splitlines():
+
+            line = line.strip()
+
+            if line.startswith("peer:"):
+                if current:
+                    peers.append(current)
+
+                current = {
+                    "public_key": line.split(": ", 1)[1]
+                }
+
+            elif line.startswith("endpoint:"):
+                current["endpoint"] = line.split(": ", 1)[1]
+
+            elif line.startswith("latest handshake:"):
+                current["handshake"] = line.split(": ", 1)[1]
+
+            elif line.startswith("transfer:"):
+                current["transfer"] = line.split(": ", 1)[1]
+
+        if current:
+            peers.append(current)
+
+        return {
+            "available": True,
+            "interface": "wg0",
+            "peers": peers,
+            "count": len(peers)
+        }
+
+    except FileNotFoundError:
+        return {
+            "available": False,
+            "error": "wg command not installed"
+        }
+
+    except Exception as e:
+        return {
+            "available": False,
+            "error": str(e)
+        }
+
+
 def collect_all() -> dict:
     return {
         "cpu": get_cpu(),
@@ -335,6 +412,7 @@ def collect_all() -> dict:
         "uptime": get_uptime(),
         "temperature": get_temperature(),
         "docker": get_docker_containers(),
+        "wireguard": get_wireguard_status(),
         "plex": get_plex_status(),
         "hostname": os.uname().nodename,
         "timestamp": time.time(),

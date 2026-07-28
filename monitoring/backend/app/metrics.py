@@ -3,6 +3,7 @@ import shutil
 import socket
 import subprocess
 import time
+from unittest import result
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
@@ -356,52 +357,50 @@ def get_wireguard_status() -> dict:
                 "available": False,
                 "error": result.stderr.strip()
             }
+        lines = result.stdout.strip().splitlines()
+
+        if not lines:
+            return {
+                "available": False,
+                "error": "Empty WireGuard response"
+            }
 
         peers = []
 
-        lines = result.stdout.strip().splitlines()
+        # пропускаем первую строку - это интерфейс
+        for line in lines[1:]:
+            fields = line.split("\t")
 
-        # первая строка — сам сервер
-        for index, line in enumerate(lines[1:], start=1):
-            data = line.split("\t")
-
-            if len(data) < 8:
+            if len(fields) < 8:
                 continue
 
-            public_key = data[0]
-            endpoint = data[2]
-            allowed_ip = data[3]
-            handshake = int(data[4])
-            rx = int(data[5])
-            tx = int(data[6])
-
-            online = handshake != 0 and (
-                time.time() - handshake < 180
-            )
+            public_key = fields[0]
+            endpoint = fields[2]
+            allowed_ips = fields[3]
+            handshake = fields[4]
+            rx_bytes = int(fields[5])
+            tx_bytes = int(fields[6])
 
             peers.append({
-                "name": f"peer{index}",
                 "public_key": public_key,
-                "ip": allowed_ip.replace("/32", ""),
-                "endpoint": endpoint if endpoint != "(none)" else None,
-                "online": online,
-                "handshake": (
-                    datetime.fromtimestamp(
-                        handshake,
-                        timezone.utc
-                    ).strftime("%Y-%m-%d %H:%M:%S UTC")
-                    if handshake
-                    else None
-                ),
-                "received": _format_bytes(rx),
-                "sent": _format_bytes(tx),
+                "endpoint": None if endpoint == "(none)" else endpoint,
+                "ip": allowed_ips,
+                "handshake": int(handshake),
+                "received_bytes": rx_bytes,
+                "sent_bytes": tx_bytes,
+                "online": handshake != "0"
             })
 
         return {
             "available": True,
-            "online": sum(1 for p in peers if p["online"]),
-            "total": len(peers),
             "peers": peers,
+            "count": len(peers)
+        }
+
+    except subprocess.TimeoutExpired:
+        return {
+            "available": False,
+            "error": "WireGuard timeout"
         }
 
     except Exception as e:

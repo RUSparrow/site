@@ -245,24 +245,30 @@ body {
 
 .docker-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 0.9rem;
 }
 
 .docker-table th {
-  text-align: left;
-  padding: 0.6rem 0.75rem;
+  text-align: center;
+  vertical-align: middle;
+  padding: 12px 16px;
   color: var(--text-muted);
   font-weight: 600;
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   border-bottom: 1px solid var(--border);
+  word-break: break-word;
 }
 
 .docker-table td {
-  padding: 0.75rem;
+  padding: 12px 16px;
+   text-align: center;
+  vertical-align: middle;
   border-bottom: 1px solid var(--border);
+  word-break: break-word;
 }
 
 .docker-table tr:last-child td {
@@ -270,7 +276,8 @@ body {
 }
 
 .docker-table tbody tr:hover {
-  background: var(--surface-2);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.05);
 }
 
 .docker-table__empty {
@@ -424,9 +431,39 @@ body {
 .wg-rx {
     color: #3b82f6;
     font-weight: 500;
+    display: inline-block;
+    margin: 3px 0;
 }
 
 .wg-tx {
     color: #f97316;
     font-weight: 500;
+    display: inline-block;
+    margin: 3px 0;
+}
+
+.docker-table code {
+    font-size: 0.9em;
+    opacity: 0.8;
+}
+
+/* WireGuard колонки */
+.wireguard-section .docker-table th:nth-child(1),
+.wireguard-section .docker-table td:nth-child(1) {
+    width: 25%;
+}
+
+.wireguard-section .docker-table th:nth-child(2),
+.wireguard-section .docker-table td:nth-child(2) {
+    width: 30%;
+}
+
+.wireguard-section .docker-table th:nth-child(3),
+.wireguard-section .docker-table td:nth-child(3) {
+    width: 20%;
+}
+
+.wireguard-section .docker-table th:nth-child(4),
+.wireguard-section .docker-table td:nth-child(4) {
+    width: 25%;
 }

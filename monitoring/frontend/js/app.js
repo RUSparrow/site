@@ -197,6 +197,7 @@ tbody.innerHTML = wg.peers.map(peer => {
   `;
 
 }).join("");
+}
 
 function renderMetrics(data) {
   const cpu = data.cpu;

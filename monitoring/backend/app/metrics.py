@@ -350,16 +350,18 @@ def get_wireguard_status() -> dict:
         if result.exit_code != 0:
             return {
                 "available": False,
-                "error": result.output.decode()
+                "error": result.output.decode(errors="ignore")
             }
 
-        lines = result.output.decode().strip().splitlines()
+        output = result.output.decode(errors="ignore").strip()
 
-        if not lines:
+        if not output:
             return {
                 "available": False,
                 "error": "Empty WireGuard response"
             }
+
+        lines = output.splitlines()
 
         peers = []
 
@@ -369,19 +371,32 @@ def get_wireguard_status() -> dict:
             if len(fields) < 8:
                 continue
 
+            handshake = int(fields[4])
+            received = int(fields[5])
+            sent = int(fields[6])
+
+            # не показываем никогда не использованных клиентов
+            if handshake == 0 and received == 0 and sent == 0:
+                continue
+
             peers.append({
                 "name": f"peer{index}",
                 "public_key": fields[0],
-                "endpoint": None if fields[2] == "(none)" else fields[2],
+                "endpoint": (
+                    None
+                    if fields[2] == "(none)"
+                    else fields[2]
+                ),
                 "ip": fields[3],
-                "handshake": int(fields[4]),
-                "received_bytes": int(fields[5]),
-                "sent_bytes": int(fields[6]),
-                "online": fields[4] != "0"
+                "handshake": handshake,
+                "received_bytes": received,
+                "sent_bytes": sent,
+                "online": handshake != 0
             })
 
         return {
             "available": True,
+            "status": "running",
             "count": len(peers),
             "peers": peers
         }
@@ -397,6 +412,7 @@ def get_wireguard_status() -> dict:
             "available": False,
             "error": str(e)
         }
+        
 
 def _format_bytes(value):
     units = ["B", "KB", "MB", "GB", "TB"]

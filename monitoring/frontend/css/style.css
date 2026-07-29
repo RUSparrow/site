@@ -411,3 +411,22 @@ body {
 .wireguard-info {
   margin-bottom:15px;
 }
+.wg-online {
+    color: #22c55e;
+    font-weight: 600;
+}
+
+.wg-offline {
+    color: #9ca3af;
+    font-weight: 600;
+}
+
+.wg-rx {
+    color: #3b82f6;
+    font-weight: 500;
+}
+
+.wg-tx {
+    color: #f97316;
+    font-weight: 500;
+}

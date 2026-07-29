@@ -169,6 +169,10 @@ tbody.innerHTML = wg.peers.map(peer => {
 
   const name = peer.name || "peer";
 
+  const status = peer.online
+    ? '<span class="wg-online">● ONLINE</span>'
+    : '<span class="wg-offline">● OFFLINE</span>';
+
   return `
     <tr>
       <td>
@@ -177,21 +181,33 @@ tbody.innerHTML = wg.peers.map(peer => {
       </td>
 
       <td>
-        ${peer.endpoint || "offline"}
+        ${status}
         <br>
-        <small>${peer.ip || ""}</small>
+        <small>
+          ${peer.endpoint || "Нет подключения"}
+        </small>
+        <br>
+        <small>
+          ${peer.ip || ""}
+        </small>
       </td>
 
       <td>
-        ${peer.handshake && peer.handshake !== 0
-          ? formatHandshake(peer.handshake)
-          : "—"}
+        ${
+          peer.handshake && peer.handshake !== 0
+            ? formatHandshake(peer.handshake)
+            : "—"
+        }
       </td>
 
       <td>
-        ↓ ${formatBytes(peer.received_bytes || 0)}
+        <span class="wg-rx">
+          ↓ RX ${formatBytes(peer.received_bytes || 0)}
+        </span>
         <br>
-        ↑ ${formatBytes(peer.sent_bytes || 0)}
+        <span class="wg-tx">
+          ↑ TX ${formatBytes(peer.sent_bytes || 0)}
+        </span>
       </td>
     </tr>
   `;
